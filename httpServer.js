@@ -12,6 +12,7 @@ try {
     if (jsonReader === undefined) throw new Error( " Can't access json-reader module" );
     if ((async === undefined)) throw new Error( " Can't access async module" );
 
+
     //Accepts the JSON object and query string parameter. Returns the error object or the studentId.
     var getStudentId = function (qParam, object, callback) {
         var students = object.students;
@@ -34,6 +35,7 @@ try {
         }
     }
 
+
     //Returns the array of names of enrolledSubjects.
     var getEnrolledSubjectNames = function (subjectArray, studentId, callback) {
         var enrolledSubjects = [];
@@ -55,8 +57,9 @@ try {
         }
     }//getEnrolledSubjectNames()
 
+
     //Accepts studentId and send response according to it using async.parallel.
-    var sendResponse = function (res, studentId, cb) {
+    var getResponse = function (res, studentId, cb) {
         var startTime = (new Date()).getTime();
         async.parallel([
             function (callback) {  //Reading sub_1.json
@@ -126,12 +129,11 @@ try {
                 });//getEnrolledSubjectNames()
             }
         });//async.parallel()
-
     }//sendResponse(parallel).
 
 
     //Accepts studentId and send response according to it using async.parallel.
-    var sendResponse1 = function (res, studentId, cb) {
+    var getResponse1 = function (res, studentId, cb) {
         var startTime = (new Date()).getTime();
         async.series([
             function (callback) {  //Reading sub_1.json
@@ -201,8 +203,7 @@ try {
                 });//getEnrolledSubjectNames()
             }
         });//async.parallel()
-
-    }//sendResponse(series).
+    }//getResponse(series).
 
 
 
@@ -228,14 +229,17 @@ try {
                                 console.log(err);
                                 res.end("ID not found in record.");
                             } else {
-                                sendResponse(res, studentId, function (err, response) {
+                                getResponse1(res, studentId, function (err, response) {
+                                    ;
+                                });//getResponse().
+                                getResponse(res, studentId, function (err, response) {
                                     if(err) {
                                         res.end("Failed to send an response.");
                                     } else {
                                         res.writeHead(200, {'Content-Type': 'text/plain' });
                                         res.end( JSON.stringify( { Books: response } ) );
                                     }
-                                });//sendResponse().
+                                });//getResponse().
                             }
                         });//getStudentId().
                     }
