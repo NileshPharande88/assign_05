@@ -59,7 +59,7 @@ try {
 
 
     //Accepts studentId and send response according to it using async.parallel.
-    var getResponse = function (res, studentId, cb) {
+    var getResponse = function (studentId, cb) {
         var startTime = (new Date()).getTime();
         async.parallel([
             function (callback) {  //Reading sub_1.json
@@ -133,7 +133,7 @@ try {
 
 
     //Accepts studentId and send response according to it using async.parallel.
-    var getResponse1 = function (res, studentId, cb) {
+    var getResponse1 = function (studentId, cb) {
         var startTime = (new Date()).getTime();
         async.series([
             function (callback) {  //Reading sub_1.json
@@ -232,7 +232,7 @@ try {
                                 getResponse1(res, studentId, function (err, response) {
                                     ;
                                 });//getResponse().
-                                getResponse(res, studentId, function (err, response) {
+                                getResponse(studentId, function (err, response) {
                                     if(err) {
                                         res.end("Failed to send an response.");
                                     } else {
