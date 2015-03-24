@@ -1,16 +1,26 @@
 try {
-    var http = require("http");
     var fs = require('fs');
+    var http = require("http");
+    var async = require("async");
     var qs = require('querystring');
     var jsonReader = require("json-reader");
-    var async = require("async");
 
     //Checks the required modules are available or not.
-    if (http === undefined) throw new Error( " Can't access http module" );
-    if (fs === undefined) throw new Error( " Can't access fs module" );
-    if (qs === undefined) throw new Error( " Can't access qs module" );
-    if (jsonReader === undefined) throw new Error( " Can't access json-reader module" );
-    if ((async === undefined)) throw new Error( " Can't access async module" );
+    if (fs === undefined) {
+        throw new Error(" Can't access fs module.");
+    }
+    if (http === undefined) {
+        throw new Error(" Can't access http module.");
+    }
+    if (async === undefined) {
+        throw new Error(" Can't access async module.");
+    }
+    if (qs === undefined) {
+        throw new Error(" Can't access querystring module.");
+    }
+    if (jsonReader === undefined) {
+        throw new Error(" Can't access jsonReader module.");
+    }
 
 
     //Accepts the JSON object and query string parameter. Returns the error object or the studentId.
@@ -59,7 +69,7 @@ try {
 
 
     //Accepts studentId and send response according to it using async.parallel.
-    var getResponse = function (studentId, cb) {
+    var getResponseParallely = function (studentId, cb) {
         var startTime = (new Date()).getTime();
         async.parallel([
             function (callback) {  //Reading sub_1.json
@@ -129,11 +139,11 @@ try {
                 });//getEnrolledSubjectNames()
             }
         });//async.parallel()
-    }//sendResponse(parallel).
+    }//getResponseParallely().
 
 
     //Accepts studentId and send response according to it using async.parallel.
-    var getResponse1 = function (studentId, cb) {
+    var getResponseSerially = function (studentId, cb) {
         var startTime = (new Date()).getTime();
         async.series([
             function (callback) {  //Reading sub_1.json
@@ -203,52 +213,48 @@ try {
                 });//getEnrolledSubjectNames()
             }
         });//async.parallel()
-    }//getResponse(series).
+    }//getResponseSerially().
 
 
 
-    var server = http.createServer ( function (req, res) {
+    var server = http.createServer ( function serverHandler(req, res) {
         var folderName = req.url.split('/')[1];  //devided url on base of "/".
-        folderName = folderName.toLowerCase();  //Converte folder name to lower case.
+        folderName = folderName.toLowerCase();
         if ( folderName === "favicon.ico" ) {
-            res.end();   //Avoid un necessory execution of code.
+            res.end();  //Avoid un necessory execution of code.
         } else {
             var qParam = qs.parse( req.url.split('?')[1] );  //Splits parameter from the URL.
-            if( qParam.email === undefined ) {//if q param is not given in url then
-                console.log("ERROR: Email is not given in the url.");
+            if ( qParam.email === undefined ) {
                 res.end("ERROR: Email is not given in the url.");
-            } else {
-                //Read source.json file using "json-reader" module.
-                jsonReader.jsonObject("./sourceFiles/students.json", function ( err, object ) {
-                    if(err) {  //Error respose if the students.json file is not read.
-                        console.log(err);
-                        res.end("ERROR: Unable to read students.json file.");
-                    } else {  //students.json file is not read correctly.
-                        getStudentId(qParam, object, function(err, studentId){
-                            if(err){  //Sent message in response that no record found for the student.
-                                console.log(err);
-                                res.end("ID not found in record.");
-                            } else {
-                                getResponse1(res, studentId, function (err, response) {
-                                    ;
-                                });//getResponse().
-                                getResponse(studentId, function (err, response) {
-                                    if(err) {
-                                        res.end("Failed to send an response.");
-                                    } else {
-                                        res.writeHead(200, {'Content-Type': 'text/plain' });
-                                        res.end( JSON.stringify( { Books: response } ) );
-                                    }
-                                });//getResponse().
-                            }
-                        });//getStudentId().
+                throw new Error(" Email is not given in the url.");
+            }
+            //Emailid found in url move further.
+            //Read source.json file using "json-reader" module.
+            jsonReader.jsonObject("./sourceFiles/students1.json", function jsonReaderHandler( err, object ) {
+                if (err) {  //Error respose if the students.json file is not read correctly.
+                    res.end("ERROR: Unable to read students.json file.");
+                    throw err;
+                }
+                getStudentId(qParam, object, function getStudIdHandler(err, studentId) {
+                    if (err) {  //Sent message in response that no record found for the student.
+                        res.end("ID not found in record.");
+                        throw err;
                     }
-                });//jsonReader.
-            }//qParam.email.
+                    //getResponseSerially(studentId, function getResponseSeriallyHandler(err, response) {
+                    getResponseParallely(studentId, function getResponseParallelyHandler(err, response) {
+                        if (err) {
+                            res.end("Failed to send an response.");
+                            throw err;
+                        }
+                        res.writeHead(200, {'Content-Type': 'text/plain'});
+                        res.end( JSON.stringify({ Books: response }) );
+                    });//getResponse().
+                });//getStudentId().
+            });//jsonReader.
         }
     });//Work of createServer is completed.
 
-    server.listen( 1337, "127.0.0.1", function() {
+    server.listen( 1337, "127.0.0.1", function listenerHandler() {
         console.log( "Listening on: 127.0.0.1: 1337" );
     });
 } catch (err) {
